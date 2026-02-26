@@ -1,0 +1,286 @@
+# Infrahub schema for a Nokia SR Linux 3-stage EVPN/VXLAN DC fabric
+# Fabric: dc1  |  Underlay: eBGP RFC5549  |  Overlay: iBGP EVPN (RR on spines)
+version: "1.0"
+
+nodes:
+  # ── Fabric container ─────────────────────────────────────────────────────
+  - name: Fabric
+    namespace: Dco
+    label: "DC Fabric"
+    description: "Top-level container representing a data centre fabric."
+    icon: "mdi:server-network"
+    default_filter: name__value
+    display_labels:
+      - name__value
+    uniqueness_constraints:
+      - ["name__value"]
+    attributes:
+      - name: name
+        kind: Text
+        unique: true
+      - name: description
+        kind: Text
+        optional: true
+
+  # ── Network device (spine / leaf) ─────────────────────────────────────────
+  - name: Device
+    namespace: Dco
+    label: "Device"
+    description: "Nokia SR Linux network device in the fabric."
+    icon: "mdi:router-network"
+    default_filter: hostname__value
+    display_labels:
+      - hostname__value
+    uniqueness_constraints:
+      - ["hostname__value"]
+    attributes:
+      - name: hostname
+        kind: Text
+        unique: true
+        label: "Hostname"
+      - name: role
+        kind: Dropdown
+        label: "Role"
+        choices:
+          - name: spine
+            label: Spine
+            color: "#6366f1"
+          - name: leaf
+            label: Leaf
+            color: "#10b981"
+      - name: platform
+        kind: Text
+        label: "Platform"
+        default_value: nokia_srlinux
+      - name: device_type
+        kind: Text
+        label: "Device Type"
+        default_value: ixrd3l
+        optional: true
+      - name: nos_version
+        kind: Text
+        label: "NOS Version"
+        optional: true
+      - name: asn
+        kind: Number
+        label: "BGP ASN"
+        optional: true
+      - name: mgmt_ip
+        kind: Text
+        label: "Management IPv4"
+        optional: true
+      - name: system_ip
+        kind: Text
+        label: "System0 (Loopback) IPv4"
+        optional: true
+    relationships:
+      - name: fabric
+        peer: DcoFabric
+        label: "Fabric"
+        cardinality: one
+        kind: Attribute
+        optional: true
+      - name: interfaces
+        peer: DcoInterface
+        label: "Interfaces"
+        cardinality: many
+        kind: Component
+        optional: true
+
+  # ── Interface (physical / logical) ───────────────────────────────────────
+  - name: Interface
+    namespace: Dco
+    label: "Interface"
+    description: "Physical or logical interface on a DC device."
+    icon: "mdi:ethernet"
+    default_filter: name__value
+    display_labels:
+      - name__value
+    attributes:
+      - name: name
+        kind: Text
+        label: "Interface Name"
+      - name: description
+        kind: Text
+        label: "Description"
+        optional: true
+      - name: if_type
+        kind: Dropdown
+        label: "Interface Type"
+        choices:
+          - name: ethernet
+            label: Ethernet
+            color: "#3b82f6"
+          - name: lag
+            label: LAG
+            color: "#f59e0b"
+          - name: irb
+            label: IRB
+            color: "#8b5cf6"
+          - name: system
+            label: System (Loopback)
+            color: "#6d7280"
+          - name: vxlan
+            label: VXLAN Tunnel
+            color: "#ec4899"
+      - name: admin_state
+        kind: Dropdown
+        label: "Admin State"
+        choices:
+          - name: enable
+            label: Enable
+            color: "#10b981"
+          - name: disable
+            label: Disable
+            color: "#ef4444"
+        default_value: enable
+      - name: ip_address
+        kind: Text
+        label: "IPv4 Address / Prefix"
+        optional: true
+      - name: connected_endpoint
+        kind: Text
+        label: "Connected Endpoint (server)"
+        optional: true
+    relationships:
+      - name: device
+        peer: DcoDevice
+        label: "Device"
+        cardinality: one
+        kind: Attribute
+        optional: false
+        identifier: "dcdevice__interfaces"
+
+  # ── Physical fabric link (leaf↔spine) ────────────────────────────────────
+  - name: FabricLink
+    namespace: Dco
+    label: "Fabric Link"
+    description: "Physical link between two devices in the fabric."
+    icon: "mdi:cable-data"
+    default_filter: name__value
+    display_labels:
+      - name__value
+    uniqueness_constraints:
+      - ["name__value"]
+    attributes:
+      - name: name
+        kind: Text
+        unique: true
+        label: "Link Name"
+      - name: link_type
+        kind: Dropdown
+        label: "Link Type"
+        choices:
+          - name: leaf_spine
+            label: Leaf-Spine
+            color: "#6366f1"
+          - name: server_access
+            label: Server Access (single-homed)
+            color: "#10b981"
+          - name: server_lag
+            label: Server LAG (multi-homed)
+            color: "#f59e0b"
+    relationships:
+      - name: endpoint_a
+        peer: DcoInterface
+        label: "Endpoint A"
+        cardinality: one
+        kind: Attribute
+        optional: false
+        identifier: "link__endpoint_a"
+      - name: endpoint_b
+        peer: DcoInterface
+        label: "Endpoint B"
+        cardinality: one
+        kind: Attribute
+        optional: false
+        identifier: "link__endpoint_b"
+
+  # ── VLAN / L2 overlay segment ─────────────────────────────────────────────
+  - name: VLAN
+    namespace: Dco
+    label: "VLAN"
+    description: "L2 EVPN/VXLAN segment (mac-vrf)."
+    icon: "mdi:lan"
+    default_filter: name__value
+    display_labels:
+      - name__value
+    uniqueness_constraints:
+      - ["vlan_id__value"]
+    attributes:
+      - name: name
+        kind: Text
+        label: "Name"
+      - name: vlan_id
+        kind: Number
+        unique: true
+        label: "VLAN ID"
+      - name: evi
+        kind: Number
+        label: "EVI"
+        optional: true
+      - name: vni
+        kind: Number
+        label: "VNI"
+        optional: true
+      - name: anycast_gw
+        kind: Text
+        label: "Anycast Gateway (IRB)"
+        optional: true
+      - name: route_target
+        kind: Text
+        label: "Route Target"
+        optional: true
+    relationships:
+      - name: vrf
+        peer: DcoVRF
+        label: "VRF"
+        cardinality: one
+        kind: Attribute
+        optional: true
+      - name: fabric
+        peer: DcoFabric
+        label: "Fabric"
+        cardinality: one
+        kind: Attribute
+        optional: true
+
+  # ── VRF / L3 tenant ───────────────────────────────────────────────────────
+  - name: VRF
+    namespace: Dco
+    label: "VRF"
+    description: "L3 IP-VRF tenant (ip-vrf + L3VNI)."
+    icon: "mdi:table-network"
+    default_filter: name__value
+    display_labels:
+      - name__value
+    uniqueness_constraints:
+      - ["name__value"]
+    attributes:
+      - name: name
+        kind: Text
+        unique: true
+        label: "VRF Name"
+      - name: description
+        kind: Text
+        label: "Description"
+        optional: true
+      - name: l3_evi
+        kind: Number
+        label: "L3 EVI"
+        optional: true
+      - name: l3_vni
+        kind: Number
+        label: "L3 VNI"
+        optional: true
+      - name: route_target
+        kind: Text
+        label: "Route Target"
+        optional: true
+    relationships:
+      - name: fabric
+        peer: DcoFabric
+        label: "Fabric"
+        cardinality: one
+        kind: Attribute
+        optional: true

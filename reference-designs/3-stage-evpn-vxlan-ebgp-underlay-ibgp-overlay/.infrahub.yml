@@ -1,0 +1,14 @@
+---
+# Infrahub repository manifest
+# Validates against infrahub-sdk schema version 1.0
+version: "1.0"
+
+queries:
+  - name: leaf_l2vpn
+    file_path: infrahub/queries/leaf_l2vpn.graphql
+
+jinja2_transforms:
+  - name: leaf-l2vpn-config
+    description: "Generate SR Linux L2VPN (mac-vrf + ip-vrf) CLI config for a leaf node"
+    query: leaf_l2vpn
+    template_path: infrahub/templates/leaf_l2vpn.j2

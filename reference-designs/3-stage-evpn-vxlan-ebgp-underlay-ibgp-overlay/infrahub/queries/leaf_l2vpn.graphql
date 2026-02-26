@@ -1,0 +1,51 @@
+# Query: leaf_l2vpn
+# Returns the device attributes plus every VLAN and VRF in the fabric.
+# Variable $device is the device hostname (e.g. "leaf1").
+# Used by the jinja2_transform: leaf-l2vpn-config
+
+query leaf_l2vpn($device: String!) {
+  DcoDevice(hostname__value: $device) {
+    edges {
+      node {
+        hostname { value }
+        asn     { value }
+        system_ip { value }
+        role    { value }
+      }
+    }
+  }
+
+  # All VLANs in the fabric – the template iterates and filters by VRF
+  DcoVLAN {
+    edges {
+      node {
+        name        { value }
+        vlan_id     { value }
+        evi         { value }
+        vni         { value }
+        anycast_gw  { value }
+        route_target { value }
+        vrf {
+          node {
+            name        { value }
+            l3_evi      { value }
+            l3_vni      { value }
+            route_target { value }
+          }
+        }
+      }
+    }
+  }
+
+  # All VRFs – drives the ip-vrf stanza loop
+  DcoVRF {
+    edges {
+      node {
+        name        { value }
+        l3_evi      { value }
+        l3_vni      { value }
+        route_target { value }
+      }
+    }
+  }
+}

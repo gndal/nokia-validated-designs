@@ -4,3 +4,16 @@ clab-*
 # ignore clab bak files
 **/*.yaml.bak
 **/*.yml.bak
+
+# secrets / local env – never commit tokens
+.env
+*.env
+
+# VS Code workspace settings (may contain API tokens)
+.vscode/
+
+# Python virtual environments
+.venv/
+__pycache__/
+*.pyc
+*.pyo
