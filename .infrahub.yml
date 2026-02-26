@@ -1,6 +1,4 @@
 ---
-version: "1.0"
-
 queries:
   - name: leaf_l2vpn
     file_path: "reference-designs/3-stage-evpn-vxlan-ebgp-underlay-ibgp-overlay/infrahub/queries/leaf_l2vpn.graphql"

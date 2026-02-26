@@ -1,8 +1,4 @@
 ---
-# Infrahub repository manifest
-# Validates against infrahub-sdk schema version 1.0
-version: "1.0"
-
 queries:
   - name: leaf_l2vpn
     file_path: infrahub/queries/leaf_l2vpn.graphql
