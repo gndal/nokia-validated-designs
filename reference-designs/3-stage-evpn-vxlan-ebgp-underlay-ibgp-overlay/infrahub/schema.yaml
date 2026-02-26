@@ -33,6 +33,8 @@ nodes:
       - hostname__value
     uniqueness_constraints:
       - ["hostname__value"]
+    inherit_from:
+      - CoreArtifactTarget
     attributes:
       - name: hostname
         kind: Text
