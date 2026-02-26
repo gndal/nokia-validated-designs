@@ -13,8 +13,8 @@
 {% set device = data.DcoDevice.edges[0].node %}
 
 {# Sort VLANs by vlan_id ascending → stable irb0 subinterface index #}
-{% set vlans = data.DcoVLAN.edges | map(attribute='node') | sort(attribute='vlan_id.value') | list %}
-{% set vrfs   = data.DcoVRF.edges  | map(attribute='node') | sort(attribute='name.value')   | list %}
+{% set vlans = data.DcoVLAN.edges | map(attribute='node') | list | sort(attribute='vlan_id.value') | list %}
+{% set vrfs   = data.DcoVRF.edges  | map(attribute='node') | list | sort(attribute='name.value')   | list %}
 
 {# ── Guard: only render for leaf nodes ───────────────────────────────── #}
 {% if device.role.value != 'leaf' %}
